@@ -1,5 +1,6 @@
 ## TODO
 
+# Create a view area for people to see their recipe after selecting it in the table
 # Remove the ability to edit directly in the table (do not want Spreadsheet style)
 # Want a push button for "Add Recipe"
 # A comboBox with the recipes and an "Edit Recipe" push button
@@ -10,7 +11,8 @@
 
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
- QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem
+    QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
+    QListWidget, QHBoxLayout, QVBoxLayout
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -19,6 +21,45 @@ class MainWindow(QMainWindow):
         ### Build GUI Elements ###
         self.setWindowTitle("Grocerly List App")
 
+        self.actionMenu = QComboBox()
+        self.actionMenu.addItems(["View Recipe", "Add Recipe", "Edit Recipe"])
+
+        self.recipeList = QListWidget()
+        self.recipeList.addItem("Ribs and Cauliflower")
+
+        self.recipe_label = QLabel("Recipe")
+        ### Build Layout ###
+        h_layout = QHBoxLayout()
+        v_layout_left = QVBoxLayout()
+        v_layout_right = QVBoxLayout()
+        h_layout.addLayout(v_layout_left)
+        h_layout.addLayout(v_layout_right)
+
+        ### Add Widgets to Layouts ##
+        layout = h_layout
+        v_layout_left.addWidget(self.actionMenu)
+        v_layout_left.addWidget(self.recipeList)
+        v_layout_right.addWidget(self.recipe_label)
+                
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        ### Initialize Global Variables ###
+        self.recipe_name_master = {}
+
+        ### Signals ###
+        #self.submit_button.clicked.connect(self.submit_pushed)
+    
+if __name__ == '__main__':
+
+   app = QApplication(sys.argv)
+   window = MainWindow()
+   window.show()
+   app.exec_()
+
+
+'''
         self.recipe_name_label = QLabel("Recipe Name")
         self.recipe_name_label.setFixedHeight(25)
         self.recipe_name_label.setFixedWidth(100)
@@ -41,26 +82,9 @@ class MainWindow(QMainWindow):
 
         self.recipe_table = QTableWidget(0, 2)
         self.recipe_table.setHorizontalHeaderLabels(["Recipe", "Servings"])
+        '''
 
-        ### Organize Layout of GUI Elements
-        layout = QVBoxLayout()
-        layout.addWidget(self.recipe_name_label)
-        layout.addWidget(self.recipe_name_input)
-        layout.addWidget(self.recipe_servings_label)
-        layout.addWidget(self.recipe_servings_input)
-        layout.addWidget(self.submit_button)
-        layout.addWidget(self.recipe_table)
-        
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-        ### Initialize Global Variables ###
-        self.recipe_name_master = {}
-
-        ### Signals ###
-        self.submit_button.clicked.connect(self.submit_pushed)
-
+'''
     def submit_pushed(self):
         print("submit button pushed")
         name = self.recipe_name_input.text()
@@ -103,10 +127,13 @@ class MainWindow(QMainWindow):
         if recipe in self.recipe_name_master:
             return False
         return True
-
-if __name__ == '__main__':
-
-   app = QApplication(sys.argv)
-   window = MainWindow()
-   window.show()
-   app.exec_()
+    
+    
+        layout.addWidget(self.recipe_name_label)
+        layout.addWidget(self.recipe_name_input)
+        layout.addWidget(self.recipe_servings_label)
+        layout.addWidget(self.recipe_servings_input)
+        layout.addWidget(self.submit_button)
+        layout.addWidget(self.recipe_table)
+        '''    
+        
