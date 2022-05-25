@@ -12,14 +12,15 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
     QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
-    QListWidget, QHBoxLayout, QVBoxLayout
+    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        ### Build GUI Elements ###
+        ### Widgets ###
         self.setWindowTitle("Grocerly List App")
+        self.setFixedSize(700, 500)
 
         self.actionMenu = QComboBox()
         self.actionMenu.addItems(["View Recipe", "Add Recipe", "Edit Recipe"])
@@ -27,19 +28,36 @@ class MainWindow(QMainWindow):
         self.recipeList = QListWidget()
         self.recipeList.addItem("Ribs and Cauliflower")
 
-        self.recipe_label = QLabel("Recipe")
-        ### Build Layout ###
+        self.recipe_label = QLabel("Ribs")
+        self.author_label = QLabel("Nathan")
+
+        self.ingredient_label = QLabel("Ingredients")
+        self.ingredient_list = QListWidget()
+        self.ingredient_list.addItem("Water")
+        self.instruction_label = QLabel("Instructions")
+        self.instructions = QTextBrowser()
+
+        ### Build Main Layout ###
         h_layout = QHBoxLayout()
         v_layout_left = QVBoxLayout()
         v_layout_right = QVBoxLayout()
         h_layout.addLayout(v_layout_left)
         h_layout.addLayout(v_layout_right)
-
-        ### Add Widgets to Layouts ##
         layout = h_layout
+
+        ### Build Left Panel ##
         v_layout_left.addWidget(self.actionMenu)
         v_layout_left.addWidget(self.recipeList)
-        v_layout_right.addWidget(self.recipe_label)
+
+        ## Build Right Panel - View Recipes ##
+        header_bar = QHBoxLayout()
+        header_bar.addWidget(self.recipe_label)
+        header_bar.addWidget(self.author_label)
+        v_layout_right.addLayout(header_bar)
+        v_layout_right.addWidget(self.ingredient_label)
+        v_layout_right.addWidget(self.ingredient_list)
+        v_layout_right.addWidget(self.instruction_label)
+        v_layout_right.addWidget(self.instructions)
                 
         container = QWidget()
         container.setLayout(layout)
