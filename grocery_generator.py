@@ -13,8 +13,21 @@ import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
     QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
     QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser
+class Instruction:
+    def __init__(self):
+        self.instruction = {}
+        self.highest_step = 0
+    
+    def add_step(self, step):
+        self.highest_step += 1
+        self.instruction[self.highest_step] = step
+    
+    def return_instructions(self):
+        instructions = ""
+        counter = 0
 
-# Ingredient data structure that holds name, units, and quantity of an ingredient
+
+# data structure that holds name, units, and quantity of an ingredient
 class Ingredient:
     def __init__(self, name, unit, quantity):
         self.name = name
@@ -22,14 +35,13 @@ class Ingredient:
         self.quantity = quantity
 
 ## Class for storing recipe information ##
-## Recipe Name, Servings, Author Name, Ingredients List, Instructions
 class Recipe:
     def __init__(self, recipe_name, servings, author):
         self.name = recipe_name
         self.servings = servings
         self.author = author
         self.ingredients = {}
-        self.instructions = {}
+        self.instructions = []
     
     def add_ingredient(self, ingredient, unit, quantity):
         ##TODO add some error checking of inputs
@@ -40,6 +52,16 @@ class Recipe:
         else:
             self.ingredients[ingredient] = Ingredient(ingredient, unit, quantity)
         
+    def add_instruction(self, step):
+        self.instructions.append(step)
+
+    def print_instructions(self):
+        counter = 1
+        for step in self.instructions:
+            print("Step {count}: {step}".format(count=counter, step=step))
+            counter += 1
+    
+    
     
     def print_ingredients(self):
         for ingredient in list(self.ingredients.values()):
@@ -56,6 +78,9 @@ class MainWindow(QMainWindow):
         test_recipe.add_ingredient("Ribs", "lb", "1")
         test_recipe.add_ingredient("Cauliflower", "bunch", "1")
         test_recipe.print_ingredients()
+        test_recipe.add_instruction("Turn the stove to medium heat and place ribs in.")
+        test_recipe.add_instruction("Sear the meat until all sides are brown")
+        test_recipe.print_instructions()
         self.recipe_master.update({test_recipe.name: test_recipe})
 
         ### Widgets ###
@@ -77,7 +102,7 @@ class MainWindow(QMainWindow):
         self.ingredient_list = QListWidget()
     
         self.instruction_label = QLabel("Instructions")
-        self.instructions = QTextBrowser()
+        self.instructions = QListWidget()
 
         #self.instructions.setSource("./instructions.txt")
 
@@ -121,8 +146,12 @@ class MainWindow(QMainWindow):
         self.servings_label.setText("Servings: {}".format(recipe.servings))
         ## Add each ingredient to the list
         for ingredient in list(recipe.ingredients.values()):
-            self.ingredient_list.addItem("{quantity} {unit}(s) of {ingredient}".format(\
+            self.ingredient_list.addItem("{quantity} {unit} of {ingredient}".format(\
                 quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
+        count = 1
+        for step in recipe.instructions:
+            self.instructions.addItem("Step {count}: {step}.".format(count=count, step=step))
+            count += 1
         
     
 if __name__ == '__main__':
