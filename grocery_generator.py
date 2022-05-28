@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         self.connect_signals_to_slots()
     
     def build_gui(self):
-        self.actionList = ["View Recipe", "Add Recipe", "Edit Recipe"]
+        self.actionList = ["View", "Add", "Edit"]
         view_widget = self.build_view_widget()
         add_widget = self.build_add_widget()
         
@@ -137,8 +137,9 @@ class MainWindow(QMainWindow):
         author_label = QLabel("Author Name:")
         servings_label = QLabel("Servings:")
         ingredient_name_label = QLabel("Ingredient Name:")
-        ingredient_units_label = QLabel("Units:")
+        ingredient_units_label = QLabel("Measurement Unit:")
         ingredient_quantity_label = QLabel("Quantity:")
+        ingredient_label = QLabel("Ingredients")
 
         self.add_actionMenu = QComboBox()
         self.add_actionMenu.addItems(self.actionList)
@@ -155,6 +156,9 @@ class MainWindow(QMainWindow):
         self.ingredient_name_input = QLineEdit()
         self.ingredient_unit_input = QLineEdit()
         self.ingredient_quantity_input = QLineEdit()
+        self.ingredient_table = QTextBrowser()
+        self.add_ingredient_btn = QPushButton("Add Ingredient")
+        self.delete_ingredient_btn = QPushButton("Delete Ingredient")
         self.submit_button = QPushButton("Submit")
 
         # Left Panel
@@ -175,10 +179,32 @@ class MainWindow(QMainWindow):
         servings_line = QHBoxLayout()
         servings_line.addWidget(servings_label)
         servings_line.addWidget(self.servings_input)
+        
+        add_delete_ingred_line = QHBoxLayout()
+        add_delete_ingred_line.addWidget(self.add_ingredient_btn)
+        add_delete_ingred_line.addWidget(self.delete_ingredient_btn)
+
+        ingredient_line = QHBoxLayout()
+        ingredient_line.addWidget(ingredient_name_label)
+        ingredient_line.addWidget(self.ingredient_name_input)
+
+        units_line = QHBoxLayout()
+        units_line.addWidget(ingredient_units_label)
+        units_line.addWidget(self.ingredient_unit_input)
+
+        quantity_line = QHBoxLayout()
+        quantity_line.addWidget(ingredient_quantity_label)
+        quantity_line.addWidget(self.ingredient_quantity_input)
 
         right_panel.addLayout(recipe_line)
         right_panel.addLayout(author_line)
         right_panel.addLayout(servings_line)
+        right_panel.addWidget(ingredient_label)
+        right_panel.addWidget(self.ingredient_table)
+        right_panel.addLayout(ingredient_line)
+        right_panel.addLayout(units_line)
+        right_panel.addLayout(quantity_line)
+        right_panel.addLayout(add_delete_ingred_line)
         right_panel.addWidget(self.submit_button)
 
         combined_layout = QHBoxLayout()
@@ -192,17 +218,13 @@ class MainWindow(QMainWindow):
     def connect_signals_to_slots(self):
         self.recipeList.itemPressed.connect(self.recipe_pressed)
         self.actionMenu.activated.connect(self.change_page)
+        self.add_actionMenu.activated.connect(self.change_page)
         #self.submit_button.clicked.connect(self.submit_pushed)
 
-
     def change_page(self, index):
-        if index == 1:
-            self.page_switcher.setCurrentIndex(1)
-            
-            print("Made it into the change page method")
+        self.page_switcher.setCurrentIndex(index)    
 
     def add_test_data(self):
-        
         test_recipe = Recipe("Ribs and Cauliflower", 2, "Susan Xie")
         test_recipe.add_ingredient("Ribs", "lb", "1")
         test_recipe.add_ingredient("Cauliflower", "bunch", "1")
