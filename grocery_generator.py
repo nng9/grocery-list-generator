@@ -10,9 +10,11 @@
 # Adding a database will allow users to share recipes with one another    
 
 import sys
+
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
     QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
-    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser
+    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser, QStackedLayout
+    
 class Instruction:
     def __init__(self):
         self.instruction = {}
@@ -61,8 +63,6 @@ class Recipe:
             print("Step {count}: {step}".format(count=counter, step=step))
             counter += 1
     
-    
-    
     def print_ingredients(self):
         for ingredient in list(self.ingredients.values()):
             print("{quantity} {unit} of {ingredient}".format(quantity=ingredient.quantity\
@@ -72,8 +72,137 @@ class Recipe:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Grocery List App")
+        self.setMinimumSize(700, 500)
 
         self.recipe_master = {}
+        self.add_test_data()
+        self.build_gui()
+        self.connect_signals_to_slots()
+    
+    def build_gui(self):
+        self.actionList = ["View Recipe", "Add Recipe", "Edit Recipe"]
+        view_widget = self.build_view_widget()
+        add_widget = self.build_add_widget()
+        
+        self.page_switcher = QStackedLayout()
+        self.page_switcher.addWidget(view_widget)
+        self.page_switcher.addWidget(add_widget)     
+        container = QWidget()
+        container.setLayout(self.page_switcher)
+        self.setCentralWidget(container)
+ 
+    def build_view_widget(self):
+        #Widgets
+        self.actionMenu = QComboBox()
+        self.actionMenu.addItems(self.actionList)
+        self.recipeList = QListWidget()
+        self.recipeList.addItems(list(self.recipe_master.keys()))
+        self.view_recipe_label = QLabel()
+        self.view_author_label = QLabel()
+        self.view_servings_label = QLabel()
+        self.view_ingredient_list = QListWidget()
+        self.view_instructions = QListWidget() #TODO Change to textedit
+        instruction_label = QLabel("Instructions")
+        ingredient_label = QLabel("Ingredients")
+        
+        # Left Panel 
+        left_panel = QVBoxLayout()
+        left_panel.addWidget(self.actionMenu)
+        left_panel.addWidget(self.recipeList)
+
+        # Right Panel
+        right_panel = QVBoxLayout()
+        header_bar = QHBoxLayout()
+        header_bar.addWidget(self.view_recipe_label)
+        header_bar.addWidget(self.view_author_label)
+        right_panel.addLayout(header_bar)
+        right_panel.addWidget(self.view_servings_label)
+        right_panel.addWidget(ingredient_label)
+        right_panel.addWidget(self.view_ingredient_list)
+        right_panel.addWidget(instruction_label)
+        right_panel.addWidget(self.view_instructions)
+        
+        combined_layout = QHBoxLayout()
+        combined_layout.addLayout(left_panel)
+        combined_layout.addLayout(right_panel)
+        view_widget = QWidget()
+        view_widget.setLayout(combined_layout)
+
+        return view_widget
+    
+    def build_add_widget(self):
+        #Widgets
+        recipe_label = QLabel("Recipe Name:")
+        author_label = QLabel("Author Name:")
+        servings_label = QLabel("Servings:")
+        ingredient_name_label = QLabel("Ingredient Name:")
+        ingredient_units_label = QLabel("Units:")
+        ingredient_quantity_label = QLabel("Quantity:")
+
+        self.add_actionMenu = QComboBox()
+        self.add_actionMenu.addItems(self.actionList)
+        self.add_recipeList = QTextBrowser()
+        temp_string = ""
+        for recipe_name in list(self.recipe_master.keys()):
+            temp_string += recipe_name
+            temp_string += "\n"
+        self.add_recipeList.setText(temp_string)
+
+        self.recipe_name_input = QLineEdit()
+        self.author_name_input = QLineEdit()
+        self.servings_input = QLineEdit()
+        self.ingredient_name_input = QLineEdit()
+        self.ingredient_unit_input = QLineEdit()
+        self.ingredient_quantity_input = QLineEdit()
+        self.submit_button = QPushButton("Submit")
+
+        # Left Panel
+        left_panel = QVBoxLayout()
+        left_panel.addWidget(self.add_actionMenu)
+        left_panel.addWidget(self.add_recipeList)
+        
+        # Right Panel
+        right_panel = QVBoxLayout()
+        recipe_line = QHBoxLayout()
+        recipe_line.addWidget(recipe_label)
+        recipe_line.addWidget(self.recipe_name_input)
+        
+        author_line = QHBoxLayout()
+        author_line.addWidget(author_label)
+        author_line.addWidget(self.author_name_input)
+
+        servings_line = QHBoxLayout()
+        servings_line.addWidget(servings_label)
+        servings_line.addWidget(self.servings_input)
+
+        right_panel.addLayout(recipe_line)
+        right_panel.addLayout(author_line)
+        right_panel.addLayout(servings_line)
+        right_panel.addWidget(self.submit_button)
+
+        combined_layout = QHBoxLayout()
+        combined_layout.addLayout(left_panel)
+        combined_layout.addLayout(right_panel)
+
+        widget = QWidget()
+        widget.setLayout(combined_layout)
+        return widget
+
+    def connect_signals_to_slots(self):
+        self.recipeList.itemPressed.connect(self.recipe_pressed)
+        self.actionMenu.activated.connect(self.change_page)
+        #self.submit_button.clicked.connect(self.submit_pushed)
+
+
+    def change_page(self, index):
+        if index == 1:
+            self.page_switcher.setCurrentIndex(1)
+            
+            print("Made it into the change page method")
+
+    def add_test_data(self):
+        
         test_recipe = Recipe("Ribs and Cauliflower", 2, "Susan Xie")
         test_recipe.add_ingredient("Ribs", "lb", "1")
         test_recipe.add_ingredient("Cauliflower", "bunch", "1")
@@ -83,74 +212,20 @@ class MainWindow(QMainWindow):
         test_recipe.print_instructions()
         self.recipe_master.update({test_recipe.name: test_recipe})
 
-        ### Widgets ###
-        self.setWindowTitle("Grocery List App")
-        self.setFixedSize(700, 500)
-
-        self.actionMenu = QComboBox()
-        self.actionMenu.addItems(["View Recipe", "Add Recipe", "Edit Recipe"])
-
-        self.recipeList = QListWidget()
-        self.recipeList.addItems(list(self.recipe_master.keys()))
-
-        self.recipe_label = QLabel()
-        self.author_label = QLabel()
-
-        self.servings_label = QLabel("Servings: ")
-
-        self.ingredient_label = QLabel("Ingredients")
-        self.ingredient_list = QListWidget()
-    
-        self.instruction_label = QLabel("Instructions")
-        self.instructions = QListWidget()
-
-        #self.instructions.setSource("./instructions.txt")
-
-        ### Create Left and Right Panel ###
-        h_layout = QHBoxLayout()
-        v_layout_left = QVBoxLayout()
-        v_layout_right = QVBoxLayout()
-        h_layout.addLayout(v_layout_left)
-        h_layout.addLayout(v_layout_right)
-        layout = h_layout
-
-        ### Add Widgets to Left Panel ##
-        v_layout_left.addWidget(self.actionMenu)
-        v_layout_left.addWidget(self.recipeList)
-
-        ## Add Widgets to Right Panel - View Recipes ##
-        header_bar = QHBoxLayout()
-        header_bar.addWidget(self.recipe_label)
-        header_bar.addWidget(self.author_label)
-        v_layout_right.addLayout(header_bar)
-        v_layout_right.addWidget(self.servings_label)
-        v_layout_right.addWidget(self.ingredient_label)
-        v_layout_right.addWidget(self.ingredient_list)
-        v_layout_right.addWidget(self.instruction_label)
-        v_layout_right.addWidget(self.instructions)
-                
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-        ### Signals ###
-        self.recipeList.itemPressed.connect(self.recipe_pressed)
-        #self.submit_button.clicked.connect(self.submit_pushed)
-    
     ## Function that handles the event when a recipe is clicked in the recipe list
     def recipe_pressed(self, item):
         print("{} was selected".format(item.text()))
         recipe = self.recipe_master[item.text()]
-        self.recipe_label.setText(recipe.name)
-        self.author_label.setText("By: {}".format(recipe.author))
-        self.servings_label.setText("Servings: {}".format(recipe.servings))
+        self.view_recipe_label.setText(recipe.name)
+        self.view_author_label.setText("By: {}".format(recipe.author))
+        self.view_servings_label.setText("Servings: {}".format(recipe.servings))
         ## Add each ingredient to the list
         for ingredient in list(recipe.ingredients.values()):
-            self.ingredient_list.addItem("{quantity} {unit} of {ingredient}".format(\
+            self.view_ingredient_list.addItem("{quantity} {unit} of {ingredient}".format(\
                 quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
         count = 1
         for step in recipe.instructions:
-            self.instructions.addItem("Step {count}: {step}.".format(count=count, step=step))
+            self.view_instructions.addItem("Step {count}: {step}.".format(count=count, step=step))
             count += 1
         
     
