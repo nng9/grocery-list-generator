@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         self.connect_signals_to_slots()
     
     def build_gui(self):
-        self.actionList = ["View", "Add", "Edit"]
+        self.actionList = ["View Recipes", "Add/Edit Recipes"]
         view_widget = self.build_view_widget()
         add_widget = self.build_add_widget()
         
@@ -143,27 +143,25 @@ class MainWindow(QMainWindow):
 
         self.add_actionMenu = QComboBox()
         self.add_actionMenu.addItems(self.actionList)
-        self.add_recipeList = QTextBrowser()
-        temp_string = ""
-        for recipe_name in list(self.recipe_master.keys()):
-            temp_string += recipe_name
-            temp_string += "\n"
-        self.add_recipeList.setText(temp_string)
-
+        self.add_recipeList = QListWidget()
+        self.add_recipeList.addItems(list(self.recipe_master.keys()))
         self.recipe_name_input = QLineEdit()
         self.author_name_input = QLineEdit()
         self.servings_input = QLineEdit()
         self.ingredient_name_input = QLineEdit()
         self.ingredient_unit_input = QLineEdit()
         self.ingredient_quantity_input = QLineEdit()
-        self.ingredient_table = QTextBrowser()
-        self.add_ingredient_btn = QPushButton("Add Ingredient")
+        self.ingredient_table = QListWidget()
+        self.add_edit_ingredient_btn = QPushButton("Add Ingredient")
+        #self.edit_ingredient_btn = QPushButton("Edit Ingredient")
         self.delete_ingredient_btn = QPushButton("Delete Ingredient")
-        self.submit_button = QPushButton("Submit")
+        self.submit_button = QPushButton("Save")
+        self.new_recipe_btn = QPushButton("New Recipe")
 
         # Left Panel
         left_panel = QVBoxLayout()
         left_panel.addWidget(self.add_actionMenu)
+        left_panel.addWidget(self.new_recipe_btn)
         left_panel.addWidget(self.add_recipeList)
         
         # Right Panel
@@ -181,7 +179,8 @@ class MainWindow(QMainWindow):
         servings_line.addWidget(self.servings_input)
         
         add_delete_ingred_line = QHBoxLayout()
-        add_delete_ingred_line.addWidget(self.add_ingredient_btn)
+        add_delete_ingred_line.addWidget(self.add_edit_ingredient_btn)
+        #add_delete_ingred_line.addWidget(self.edit_ingredient_btn)
         add_delete_ingred_line.addWidget(self.delete_ingredient_btn)
 
         ingredient_line = QHBoxLayout()
@@ -216,26 +215,28 @@ class MainWindow(QMainWindow):
         return widget
 
     def connect_signals_to_slots(self):
-        self.recipeList.itemPressed.connect(self.recipe_pressed)
+        self.recipeList.itemPressed.connect(self.view_recipe_pressed)
         self.actionMenu.activated.connect(self.change_page)
         self.add_actionMenu.activated.connect(self.change_page)
-        #self.submit_button.clicked.connect(self.submit_pushed)
-
-    def change_page(self, index):
-        self.page_switcher.setCurrentIndex(index)    
+        self.add_recipeList.itemPressed.connect(self.add_recipe_pressed)
+        self.ingredient_table.itemPressed.connect(self.ingredient_pressed)
 
     def add_test_data(self):
-        test_recipe = Recipe("Ribs and Cauliflower", 2, "Susan Xie")
-        test_recipe.add_ingredient("Ribs", "lb", "1")
-        test_recipe.add_ingredient("Cauliflower", "bunch", "1")
+        test_recipe = Recipe("Ribs and Cauliflower", "2", "Susan Xie")
+        test_recipe.add_ingredient("ribs", "lb", "1")
+        test_recipe.add_ingredient("cauliflower", "bunch", "1")
         test_recipe.print_ingredients()
         test_recipe.add_instruction("Turn the stove to medium heat and place ribs in.")
         test_recipe.add_instruction("Sear the meat until all sides are brown")
         test_recipe.print_instructions()
         self.recipe_master.update({test_recipe.name: test_recipe})
 
+    ## Function that handles switching between the different pages when the actionBox changes
+    def change_page(self, index):
+        self.page_switcher.setCurrentIndex(index)    
+
     ## Function that handles the event when a recipe is clicked in the recipe list
-    def recipe_pressed(self, item):
+    def view_recipe_pressed(self, item):
         print("{} was selected".format(item.text()))
         recipe = self.recipe_master[item.text()]
         self.view_recipe_label.setText(recipe.name)
@@ -249,7 +250,38 @@ class MainWindow(QMainWindow):
         for step in recipe.instructions:
             self.view_instructions.addItem("Step {count}: {step}.".format(count=count, step=step))
             count += 1
+    
+    def add_recipe_pressed(self, item):
+        recipe = self.recipe_master[item.text()]
+        self.current_recipe = recipe
+        self.recipe_name_input.setText(recipe.name)
+        self.author_name_input.setText(recipe.author)
+        self.servings_input.setText(recipe.servings)
+        # Add ingredients to list
+        for ingredient in list(recipe.ingredients.values()):
+            self.ingredient_table.addItem("{quantity} {unit} of {ingredient}".format(\
+                quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
+        self.ingredient_table.addItem("*New Ingredient*")
+
+        # TODO: add instructions stuff
+    
+    def ingredient_pressed(self, item):
+        ingredient_name = self.get_last_word(item.text())
+        if ingredient_name == "Ingredient*":
+            self.add_edit_ingredient_btn.setText("Add Ingredient")
+            self.ingredient_name_input.setText("")
+            self.ingredient_quantity_input.setText("")
+            self.ingredient_unit_input.setText("")
+        else:
+            self.add_edit_ingredient_btn.setText("Edit Ingredient")
+            ingredient = self.current_recipe.ingredients[ingredient_name]
+            self.ingredient_name_input.setText(ingredient.name)
+            self.ingredient_quantity_input.setText(ingredient.quantity)
+            self.ingredient_unit_input.setText(ingredient.unit)
         
+
+    def get_last_word(self, string):
+        return string.split()[-1]
     
 if __name__ == '__main__':
 
