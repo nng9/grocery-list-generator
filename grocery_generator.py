@@ -152,10 +152,10 @@ class MainWindow(QMainWindow):
         self.ingredient_unit_input = QLineEdit()
         self.ingredient_quantity_input = QLineEdit()
         self.ingredient_table = QListWidget()
-        self.add_edit_ingredient_btn = QPushButton("Add Ingredient")
-        #self.edit_ingredient_btn = QPushButton("Edit Ingredient")
+        self.add_ingredient_btn = QPushButton("Add Ingredient")
+        self.edit_ingredient_btn = QPushButton("Edit Ingredient")
         self.delete_ingredient_btn = QPushButton("Delete Ingredient")
-        self.submit_button = QPushButton("Save")
+        #self.submit_button = QPushButton("Save")
         self.new_recipe_btn = QPushButton("New Recipe")
 
         # Left Panel
@@ -178,10 +178,9 @@ class MainWindow(QMainWindow):
         servings_line.addWidget(servings_label)
         servings_line.addWidget(self.servings_input)
         
-        add_delete_ingred_line = QHBoxLayout()
-        add_delete_ingred_line.addWidget(self.add_edit_ingredient_btn)
-        #add_delete_ingred_line.addWidget(self.edit_ingredient_btn)
-        add_delete_ingred_line.addWidget(self.delete_ingredient_btn)
+        edit_delete_ingred_line = QHBoxLayout()
+        edit_delete_ingred_line.addWidget(self.edit_ingredient_btn)
+        edit_delete_ingred_line.addWidget(self.delete_ingredient_btn)
 
         ingredient_line = QHBoxLayout()
         ingredient_line.addWidget(ingredient_name_label)
@@ -195,16 +194,23 @@ class MainWindow(QMainWindow):
         quantity_line.addWidget(ingredient_quantity_label)
         quantity_line.addWidget(self.ingredient_quantity_input)
 
+        editing_ingredient_box = QVBoxLayout()
+        editing_ingredient_box.addLayout(ingredient_line)
+        editing_ingredient_box.addLayout(units_line)
+        editing_ingredient_box.addLayout(quantity_line)
+        editing_ingredient_box.addLayout(edit_delete_ingred_line)
+
+        self.edit_ingred_container = QWidget()
+        self.edit_ingred_container.setLayout(editing_ingredient_box)
+
         right_panel.addLayout(recipe_line)
         right_panel.addLayout(author_line)
         right_panel.addLayout(servings_line)
         right_panel.addWidget(ingredient_label)
         right_panel.addWidget(self.ingredient_table)
-        right_panel.addLayout(ingredient_line)
-        right_panel.addLayout(units_line)
-        right_panel.addLayout(quantity_line)
-        right_panel.addLayout(add_delete_ingred_line)
-        right_panel.addWidget(self.submit_button)
+        right_panel.addWidget(self.add_ingredient_btn)
+        right_panel.addWidget(self.edit_ingred_container)
+        self.edit_ingred_container.hide()
 
         combined_layout = QHBoxLayout()
         combined_layout.addLayout(left_panel)
@@ -218,8 +224,13 @@ class MainWindow(QMainWindow):
         self.recipeList.itemPressed.connect(self.view_recipe_pressed)
         self.actionMenu.activated.connect(self.change_page)
         self.add_actionMenu.activated.connect(self.change_page)
-        self.add_recipeList.itemPressed.connect(self.add_recipe_pressed)
+        self.add_recipeList.itemPressed.connect(self.add_edit_page_recipe_selected)
         self.ingredient_table.itemPressed.connect(self.ingredient_pressed)
+
+        ## Add/Edit Page
+        self.ingredient_table.currentItemChanged.connect(self.ingredient_pressed)
+        self.add_ingredient_btn.pressed.connect(self.add_ingredient_btn_slot)
+
 
     def add_test_data(self):
         test_recipe = Recipe("Ribs and Cauliflower", "2", "Susan Xie")
@@ -251,37 +262,51 @@ class MainWindow(QMainWindow):
             self.view_instructions.addItem("Step {count}: {step}.".format(count=count, step=step))
             count += 1
     
-    def add_recipe_pressed(self, item):
+    ## This function is activated when a user selects a recipe from the list
+    ## It fills in the recipe information on the right hand side of the panel
+    def add_edit_page_recipe_selected(self, item):
         recipe = self.recipe_master[item.text()]
-        self.current_recipe = recipe
+        self.active_recipe = recipe
         self.recipe_name_input.setText(recipe.name)
         self.author_name_input.setText(recipe.author)
         self.servings_input.setText(recipe.servings)
+        self.adding_new_ingredient = False
         # Add ingredients to list
         for ingredient in list(recipe.ingredients.values()):
             self.ingredient_table.addItem("{quantity} {unit} of {ingredient}".format(\
                 quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
-        self.ingredient_table.addItem("*New Ingredient*")
 
         # TODO: add instructions stuff
     
+    ## This function is activated when a user selects an ingredient in the ingredient table
+    ## The function fills in the appropriate LineEdits with the ingredient's info for the user to edit
+    ## or delete
     def ingredient_pressed(self, item):
         ingredient_name = self.get_last_word(item.text())
-        if ingredient_name == "Ingredient*":
-            self.add_edit_ingredient_btn.setText("Add Ingredient")
-            self.ingredient_name_input.setText("")
-            self.ingredient_quantity_input.setText("")
-            self.ingredient_unit_input.setText("")
-        else:
-            self.add_edit_ingredient_btn.setText("Edit Ingredient")
-            ingredient = self.current_recipe.ingredients[ingredient_name]
+        if not ingredient_name == "Ingredient*":
+            if self.adding_new_ingredient:
+                self.ingredient_table.takeItem(0)
+                self.adding_new_ingredient = False
+            ingredient = self.active_recipe.ingredients[ingredient_name]
+            self.edit_ingred_container.show()
             self.ingredient_name_input.setText(ingredient.name)
             self.ingredient_quantity_input.setText(ingredient.quantity)
             self.ingredient_unit_input.setText(ingredient.unit)
         
-
+    # Helper function that accepts a string and returns the last word in the string
     def get_last_word(self, string):
         return string.split()[-1]
+    
+    ## This function is activated when the Add Ingredient button is pressed
+    ## This function adds "*New Ingredient" to the ingredient list
+    def add_ingredient_btn_slot(self):
+        if not self.adding_new_ingredient:
+            self.ingredient_table.insertItem(0, "*New Ingredient*")
+            self.adding_new_ingredient = True
+            self.ingredient_table.setCurrentRow(0)
+            self.ingredient_name_input.setText("")
+            self.ingredient_quantity_input.setText("")
+            self.ingredient_unit_input.setText("")
     
 if __name__ == '__main__':
 
