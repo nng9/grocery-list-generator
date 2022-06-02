@@ -13,7 +13,8 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
     QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
-    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser, QStackedLayout, QListWidgetItem
+    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser, QStackedLayout, QListWidgetItem, \
+    QAbstractItemView
     
 class Instruction:
     def __init__(self):
@@ -78,72 +79,24 @@ class MainWindow(QMainWindow):
         self.recipe_master = {}
         self.active_recipe = ""
         self.active_ingredient = ""
+
         self.add_test_data()
         self.build_gui()
         
         self.connect_signals_to_slots()
     
     def build_gui(self):
-        self.actionList = ["View Recipes", "Add/Edit Recipes"]
-        view_widget = self.build_view_widget()
-        add_widget = self.build_add_widget()
-        
+        self.actionList = ["Recipes"]
+        recipe_page = self.build_recipe_widget()
         self.page_switcher = QStackedLayout()
-        self.page_switcher.addWidget(view_widget)
-        self.page_switcher.addWidget(add_widget)     
+        self.page_switcher.addWidget(recipe_page)     
         container = QWidget()
         container.setLayout(self.page_switcher)
         self.setCentralWidget(container)
- 
-    def build_view_widget(self):
-        #Widgets
-        self.actionMenu = QComboBox()
-        self.actionMenu.addItems(self.actionList)
-        self.recipeList = QListWidget()
-        self.recipeList.addItems(list(self.recipe_master.keys()))
-        self.view_recipe_label = QLabel()
-        self.view_author_label = QLabel()
-        self.view_servings_label = QLabel()
-        self.view_ingredient_list = QListWidget()
-        self.view_instructions = QListWidget() #TODO Change to textedit
-        instruction_label = QLabel("Instructions")
-        ingredient_label = QLabel("Ingredients")
         
-        # Left Panel 
-        left_panel = QVBoxLayout()
-        left_panel.addWidget(self.actionMenu)
-        left_panel.addWidget(self.recipeList)
-
-        # Right Panel
-        right_panel = QVBoxLayout()
-        header_bar = QHBoxLayout()
-        header_bar.addWidget(self.view_recipe_label)
-        header_bar.addWidget(self.view_author_label)
-        right_panel.addLayout(header_bar)
-        right_panel.addWidget(self.view_servings_label)
-        right_panel.addWidget(ingredient_label)
-        right_panel.addWidget(self.view_ingredient_list)
-        right_panel.addWidget(instruction_label)
-        right_panel.addWidget(self.view_instructions)
-        
-        combined_layout = QHBoxLayout()
-        combined_layout.addLayout(left_panel)
-        combined_layout.addLayout(right_panel)
-        view_widget = QWidget()
-        view_widget.setLayout(combined_layout)
-
-        return view_widget
     
-    def build_add_widget(self):
+    def build_recipe_widget(self):
         #Widgets
-        recipe_label = QLabel("Recipe Name: ")
-        author_label = QLabel("Author Name: ")
-        servings_label = QLabel("Servings:          ")
-        ingredient_name_label = QLabel("Ingredient Name:")
-        ingredient_units_label = QLabel("Measurement Unit:")
-        ingredient_quantity_label = QLabel("Quantity:")
-        ingredient_label = QLabel("Ingredients")
-
         self.add_actionMenu = QComboBox()
         self.add_actionMenu.addItems(self.actionList)
         self.add_recipeList = QListWidget()
@@ -170,19 +123,19 @@ class MainWindow(QMainWindow):
         # Right Panel
         right_panel = QVBoxLayout()
         recipe_line = QHBoxLayout()
-        recipe_line.addWidget(recipe_label)
+        recipe_line.addWidget(QLabel("Recipe Name: "))
         recipe_line.addWidget(self.recipe_name_input)
         
         author_line = QHBoxLayout()
-        author_line.addWidget(author_label)
+        author_line.addWidget(QLabel("Author Name: "))
         author_line.addWidget(self.author_name_input)
 
         servings_line = QHBoxLayout()
-        servings_line.addWidget(servings_label)
+        servings_line.addWidget(QLabel("Servings:          "))
         servings_line.addWidget(self.servings_input)
 
         ingredient_label_line = QHBoxLayout()
-        ingredient_label_line.addWidget(ingredient_label)
+        ingredient_label_line.addWidget(QLabel("Ingredients"))
         ingredient_label_line.addWidget(self.edit_ingredients_list_btn)
         
         edit_delete_ingred_line = QHBoxLayout()
@@ -190,18 +143,19 @@ class MainWindow(QMainWindow):
         edit_delete_ingred_line.addWidget(self.delete_ingredient_btn)
 
         ingredient_line = QHBoxLayout()
-        ingredient_line.addWidget(ingredient_name_label)
+        ingredient_line.addWidget(QLabel("Ingredient Name:"))
         ingredient_line.addWidget(self.ingredient_name_input)
 
         units_line = QHBoxLayout()
-        units_line.addWidget(ingredient_units_label)
+        units_line.addWidget(QLabel("Measurement Unit:"))
         units_line.addWidget(self.ingredient_unit_input)
 
         quantity_line = QHBoxLayout()
-        quantity_line.addWidget(ingredient_quantity_label)
+        quantity_line.addWidget(QLabel("Quantity:"))
         quantity_line.addWidget(self.ingredient_quantity_input)
 
         editing_ingredient_box = QVBoxLayout()
+        editing_ingredient_box.addWidget(self.add_ingredient_btn)
         editing_ingredient_box.addLayout(ingredient_line)
         editing_ingredient_box.addLayout(units_line)
         editing_ingredient_box.addLayout(quantity_line)
@@ -215,7 +169,6 @@ class MainWindow(QMainWindow):
         right_panel.addLayout(servings_line)
         right_panel.addLayout(ingredient_label_line)
         right_panel.addWidget(self.ingredient_table)
-        right_panel.addWidget(self.add_ingredient_btn)
         right_panel.addWidget(self.edit_ingred_container)
         self.edit_ingred_container.hide()
 
@@ -223,22 +176,37 @@ class MainWindow(QMainWindow):
         combined_layout.addLayout(left_panel)
         combined_layout.addLayout(right_panel)
 
+        self.ingredient_table.setSelectionMode(QAbstractItemView.NoSelection)
+
         widget = QWidget()
         widget.setLayout(combined_layout)
         return widget
 
     def connect_signals_to_slots(self):
-        self.recipeList.itemPressed.connect(self.view_recipe_pressed)
-        self.actionMenu.activated.connect(self.change_page)
+        #self.recipeList.itemPressed.connect(self.view_recipe_pressed)
+        #self.actionMenu.activated.connect(self.change_page)
     
         ## Add/Edit Page
         self.add_recipeList.currentItemChanged.connect(self.add_edit_page_recipe_selected)
         self.add_actionMenu.activated.connect(self.change_page)
-        self.ingredient_table.currentItemChanged.connect(self.ingredient_pressed)
+        self.ingredient_table.itemSelectionChanged.connect(self.ingredient_selected)
         self.add_ingredient_btn.pressed.connect(self.add_ingredient_btn_slot)
         self.edit_ingredient_btn.pressed.connect(self.edit_ingredient_btn_slot)
+        self.edit_ingredients_list_btn.pressed.connect(self.edit_ingredients_list_btn_slot)
 
+    def edit_ingredients_list_btn_slot(self):
+        
+        if self.edit_ingredients_list_btn.text()[0] == "E":
+            self.edit_ingredients_list_btn.setText("Finish Editing")
+            self.edit_ingred_container.show()
+            self.ingredient_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        else:
+            self.edit_ingredients_list_btn.setText("Edit Ingredients")
+            self.edit_ingred_container.hide()
+            self.ingredient_table.setCurrentRow(100)
+            self.ingredient_table.setSelectionMode(QAbstractItemView.NoSelection)
 
+    
     def add_test_data(self):
         test_recipe = Recipe("Ribs and Cauliflower", "2", "Susan Xie")
         test_recipe.add_ingredient("ribs", "lb", "1")
@@ -292,19 +260,20 @@ class MainWindow(QMainWindow):
     ## This function is activated when a user selects an ingredient in the ingredient table
     ## The function fills in the appropriate LineEdits with the ingredient's info for the user to edit
     ## or delete
-    def ingredient_pressed(self, item):
+    def ingredient_selected(self):
         try:
+            item = self.ingredient_table.selectedItems()[0]
             ingredient_name = self.get_last_word(item.text())
         except:
             return
 
+        self.ingredient_inputs_mode("ON")
         if not ingredient_name == "Ingredient*":
             if self.adding_new_ingredient:
                 self.ingredient_table.takeItem(self.ingredient_table.row(self.new_ingredient_holder))
                 self.adding_new_ingredient = False
             
             self.active_ingredient = self.active_recipe.ingredients[ingredient_name]
-            self.edit_ingred_container.show()
             self.ingredient_name_input.setText(self.active_ingredient.name)
             self.ingredient_quantity_input.setText(self.active_ingredient.quantity)
             self.ingredient_unit_input.setText(self.active_ingredient.unit)
@@ -312,6 +281,16 @@ class MainWindow(QMainWindow):
     # Helper function that accepts a string and returns the last word in the string
     def get_last_word(self, string):
         return string.split()[-1]
+
+    def ingredient_inputs_mode(self, mode):
+        if mode == "ON":
+            self.ingredient_name_input.setReadOnly(False)
+            self.ingredient_quantity_input.setReadOnly(False)
+            self.ingredient_unit_input.setReadOnly(False)
+        else:
+            self.ingredient_name_input.setReadOnly(True)
+            self.ingredient_quantity_input.setReadOnly(True)
+            self.ingredient_unit_input.setReadOnly(True)
     
     ## This function is activated when the new Ingredient button is pressed
     ## This function adds "*New Ingredient" to the ingredient list
@@ -321,11 +300,7 @@ class MainWindow(QMainWindow):
             self.ingredient_table.addItem(self.new_ingredient_holder)
             self.ingredient_table.setCurrentItem(self.new_ingredient_holder)
             self.adding_new_ingredient = True
-
-            self.ingredient_name_input.setText("")
-            self.ingredient_quantity_input.setText("")
-            self.ingredient_unit_input.setText("")
-            self.edit_ingred_container.show()
+            self.clear_ingredient_inputs()
     
     ## This function is activated when the Edit Ingredient Button is pressed
     ## This functions checks the inputs for validity, updates the active recipe's
@@ -335,24 +310,20 @@ class MainWindow(QMainWindow):
         unit = self.ingredient_unit_input.text()
         quantity = self.ingredient_quantity_input.text()
 
-        # Check validity of inputs
+        # Check inputs are not blank and quantity is numeric
         if len(name) > 0 and len(unit) > 0 and \
             len(quantity) > 0 and quantity.isnumeric():
-            print("ingredients are valid")
-
-            # New ingredient
-            if self.adding_new_ingredient:
+            if self.adding_new_ingredient: # New ingredient
                 self.adding_new_ingredient = False
                 self.active_recipe.add_ingredient(name, unit, quantity)
-            # Existing ingredient
-            else:
+            else: # Existing ingredient
                 self.active_ingredient.name = name
                 self.active_ingredient.unit = unit
                 self.active_ingredient.quantity = quantity
             self.add_edit_page_update_ingredient_list()
             self.active_ingredient = None
             self.clear_ingredient_inputs()
-            self.edit_ingred_container.hide()
+            self.ingredient_inputs_mode("OFF")
         else:
             print("ingredient inputs are invalid")
             return
@@ -371,5 +342,44 @@ if __name__ == '__main__':
 
 
 
-
+# Archive
+'''
+    def build_view_widget(self):
+        #Widgets
+        self.actionMenu = QComboBox()
+        self.actionMenu.addItems(self.actionList)
+        self.recipeList = QListWidget()
+        self.recipeList.addItems(list(self.recipe_master.keys()))
+        self.view_recipe_label = QLabel()
+        self.view_author_label = QLabel()
+        self.view_servings_label = QLabel()
+        self.view_ingredient_list = QListWidget()
+        self.view_instructions = QListWidget() #TODO Change to textedit
+        instruction_label = QLabel("Instructions")
+        ingredient_label = QLabel("Ingredients")
         
+        # Left Panel 
+        left_panel = QVBoxLayout()
+        left_panel.addWidget(self.actionMenu)
+        left_panel.addWidget(self.recipeList)
+
+        # Right Panel
+        right_panel = QVBoxLayout()
+        header_bar = QHBoxLayout()
+        header_bar.addWidget(self.view_recipe_label)
+        header_bar.addWidget(self.view_author_label)
+        right_panel.addLayout(header_bar)
+        right_panel.addWidget(self.view_servings_label)
+        right_panel.addWidget(ingredient_label)
+        right_panel.addWidget(self.view_ingredient_list)
+        right_panel.addWidget(instruction_label)
+        right_panel.addWidget(self.view_instructions)
+        
+        combined_layout = QHBoxLayout()
+        combined_layout.addLayout(left_panel)
+        combined_layout.addLayout(right_panel)
+        view_widget = QWidget()
+        view_widget.setLayout(combined_layout)
+
+        return view_widget
+    '''        
