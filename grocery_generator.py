@@ -13,7 +13,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
     QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
-    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser, QStackedLayout
+    QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser, QStackedLayout, QListWidgetItem
     
 class Instruction:
     def __init__(self):
@@ -45,9 +45,9 @@ class Recipe:
         self.ingredients = {}
         self.instructions = []
     
+    # Function that adds an ingredient to the recipe or edits an ingredient
+    # if it already exists
     def add_ingredient(self, ingredient, unit, quantity):
-        ##TODO add some error checking of inputs
-
         if ingredient in self.ingredients:
             self.ingredients[ingredient].unit = unit
             self.ingredients[ingredient].quantity = quantity
@@ -76,8 +76,11 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(700, 500)
 
         self.recipe_master = {}
+        self.active_recipe = ""
+        self.active_ingredient = ""
         self.add_test_data()
         self.build_gui()
+        
         self.connect_signals_to_slots()
     
     def build_gui(self):
@@ -133,9 +136,9 @@ class MainWindow(QMainWindow):
     
     def build_add_widget(self):
         #Widgets
-        recipe_label = QLabel("Recipe Name:")
-        author_label = QLabel("Author Name:")
-        servings_label = QLabel("Servings:")
+        recipe_label = QLabel("Recipe Name: ")
+        author_label = QLabel("Author Name: ")
+        servings_label = QLabel("Servings:          ")
         ingredient_name_label = QLabel("Ingredient Name:")
         ingredient_units_label = QLabel("Measurement Unit:")
         ingredient_quantity_label = QLabel("Quantity:")
@@ -152,11 +155,11 @@ class MainWindow(QMainWindow):
         self.ingredient_unit_input = QLineEdit()
         self.ingredient_quantity_input = QLineEdit()
         self.ingredient_table = QListWidget()
-        self.add_ingredient_btn = QPushButton("Add Ingredient")
+        self.add_ingredient_btn = QPushButton("New Ingredient")
         self.edit_ingredient_btn = QPushButton("Edit Ingredient")
         self.delete_ingredient_btn = QPushButton("Delete Ingredient")
-        #self.submit_button = QPushButton("Save")
         self.new_recipe_btn = QPushButton("New Recipe")
+        self.edit_ingredients_list_btn = QPushButton("Edit Ingredients")
 
         # Left Panel
         left_panel = QVBoxLayout()
@@ -177,6 +180,10 @@ class MainWindow(QMainWindow):
         servings_line = QHBoxLayout()
         servings_line.addWidget(servings_label)
         servings_line.addWidget(self.servings_input)
+
+        ingredient_label_line = QHBoxLayout()
+        ingredient_label_line.addWidget(ingredient_label)
+        ingredient_label_line.addWidget(self.edit_ingredients_list_btn)
         
         edit_delete_ingred_line = QHBoxLayout()
         edit_delete_ingred_line.addWidget(self.edit_ingredient_btn)
@@ -206,7 +213,7 @@ class MainWindow(QMainWindow):
         right_panel.addLayout(recipe_line)
         right_panel.addLayout(author_line)
         right_panel.addLayout(servings_line)
-        right_panel.addWidget(ingredient_label)
+        right_panel.addLayout(ingredient_label_line)
         right_panel.addWidget(self.ingredient_table)
         right_panel.addWidget(self.add_ingredient_btn)
         right_panel.addWidget(self.edit_ingred_container)
@@ -223,23 +230,21 @@ class MainWindow(QMainWindow):
     def connect_signals_to_slots(self):
         self.recipeList.itemPressed.connect(self.view_recipe_pressed)
         self.actionMenu.activated.connect(self.change_page)
-        self.add_actionMenu.activated.connect(self.change_page)
-        self.add_recipeList.itemPressed.connect(self.add_edit_page_recipe_selected)
-        self.ingredient_table.itemPressed.connect(self.ingredient_pressed)
-
+    
         ## Add/Edit Page
+        self.add_recipeList.currentItemChanged.connect(self.add_edit_page_recipe_selected)
+        self.add_actionMenu.activated.connect(self.change_page)
         self.ingredient_table.currentItemChanged.connect(self.ingredient_pressed)
         self.add_ingredient_btn.pressed.connect(self.add_ingredient_btn_slot)
+        self.edit_ingredient_btn.pressed.connect(self.edit_ingredient_btn_slot)
 
 
     def add_test_data(self):
         test_recipe = Recipe("Ribs and Cauliflower", "2", "Susan Xie")
         test_recipe.add_ingredient("ribs", "lb", "1")
         test_recipe.add_ingredient("cauliflower", "bunch", "1")
-        test_recipe.print_ingredients()
         test_recipe.add_instruction("Turn the stove to medium heat and place ribs in.")
         test_recipe.add_instruction("Sear the meat until all sides are brown")
-        test_recipe.print_instructions()
         self.recipe_master.update({test_recipe.name: test_recipe})
 
     ## Function that handles switching between the different pages when the actionBox changes
@@ -248,12 +253,13 @@ class MainWindow(QMainWindow):
 
     ## Function that handles the event when a recipe is clicked in the recipe list
     def view_recipe_pressed(self, item):
-        print("{} was selected".format(item.text()))
         recipe = self.recipe_master[item.text()]
         self.view_recipe_label.setText(recipe.name)
         self.view_author_label.setText("By: {}".format(recipe.author))
         self.view_servings_label.setText("Servings: {}".format(recipe.servings))
-        ## Add each ingredient to the list
+        self.view_ingredient_list.clear()
+        self.view_instructions.clear()
+        
         for ingredient in list(recipe.ingredients.values()):
             self.view_ingredient_list.addItem("{quantity} {unit} of {ingredient}".format(\
                 quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
@@ -271,42 +277,90 @@ class MainWindow(QMainWindow):
         self.author_name_input.setText(recipe.author)
         self.servings_input.setText(recipe.servings)
         self.adding_new_ingredient = False
-        # Add ingredients to list
-        for ingredient in list(recipe.ingredients.values()):
-            self.ingredient_table.addItem("{quantity} {unit} of {ingredient}".format(\
-                quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
+
+        self.add_edit_page_update_ingredient_list()
 
         # TODO: add instructions stuff
+    
+    # Helper function that clears the ingredient table and then re-populates it
+    def add_edit_page_update_ingredient_list(self):
+        self.ingredient_table.clear()
+        for ingredient in list(self.active_recipe.ingredients.values()):
+            self.ingredient_table.addItem("{quantity} {unit} of {ingredient}".format(\
+                quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
     
     ## This function is activated when a user selects an ingredient in the ingredient table
     ## The function fills in the appropriate LineEdits with the ingredient's info for the user to edit
     ## or delete
     def ingredient_pressed(self, item):
-        ingredient_name = self.get_last_word(item.text())
+        try:
+            ingredient_name = self.get_last_word(item.text())
+        except:
+            return
+
         if not ingredient_name == "Ingredient*":
             if self.adding_new_ingredient:
-                self.ingredient_table.takeItem(0)
+                self.ingredient_table.takeItem(self.ingredient_table.row(self.new_ingredient_holder))
                 self.adding_new_ingredient = False
-            ingredient = self.active_recipe.ingredients[ingredient_name]
+            
+            self.active_ingredient = self.active_recipe.ingredients[ingredient_name]
             self.edit_ingred_container.show()
-            self.ingredient_name_input.setText(ingredient.name)
-            self.ingredient_quantity_input.setText(ingredient.quantity)
-            self.ingredient_unit_input.setText(ingredient.unit)
+            self.ingredient_name_input.setText(self.active_ingredient.name)
+            self.ingredient_quantity_input.setText(self.active_ingredient.quantity)
+            self.ingredient_unit_input.setText(self.active_ingredient.unit)
         
     # Helper function that accepts a string and returns the last word in the string
     def get_last_word(self, string):
         return string.split()[-1]
     
-    ## This function is activated when the Add Ingredient button is pressed
+    ## This function is activated when the new Ingredient button is pressed
     ## This function adds "*New Ingredient" to the ingredient list
     def add_ingredient_btn_slot(self):
         if not self.adding_new_ingredient:
-            self.ingredient_table.insertItem(0, "*New Ingredient*")
+            self.new_ingredient_holder = QListWidgetItem("*New Ingredient*")
+            self.ingredient_table.addItem(self.new_ingredient_holder)
+            self.ingredient_table.setCurrentItem(self.new_ingredient_holder)
             self.adding_new_ingredient = True
-            self.ingredient_table.setCurrentRow(0)
+
             self.ingredient_name_input.setText("")
             self.ingredient_quantity_input.setText("")
             self.ingredient_unit_input.setText("")
+            self.edit_ingred_container.show()
+    
+    ## This function is activated when the Edit Ingredient Button is pressed
+    ## This functions checks the inputs for validity, updates the active recipe's
+    ## internal ingredient list and then re-populates the ingredient list
+    def edit_ingredient_btn_slot(self):
+        name = self.ingredient_name_input.text()
+        unit = self.ingredient_unit_input.text()
+        quantity = self.ingredient_quantity_input.text()
+
+        # Check validity of inputs
+        if len(name) > 0 and len(unit) > 0 and \
+            len(quantity) > 0 and quantity.isnumeric():
+            print("ingredients are valid")
+
+            # New ingredient
+            if self.adding_new_ingredient:
+                self.adding_new_ingredient = False
+                self.active_recipe.add_ingredient(name, unit, quantity)
+            # Existing ingredient
+            else:
+                self.active_ingredient.name = name
+                self.active_ingredient.unit = unit
+                self.active_ingredient.quantity = quantity
+            self.add_edit_page_update_ingredient_list()
+            self.active_ingredient = None
+            self.clear_ingredient_inputs()
+            self.edit_ingred_container.hide()
+        else:
+            print("ingredient inputs are invalid")
+            return
+    
+    def clear_ingredient_inputs(self):
+        self.ingredient_name_input.setText("")
+        self.ingredient_quantity_input.setText("")
+        self.ingredient_unit_input.setText("")
     
 if __name__ == '__main__':
 
