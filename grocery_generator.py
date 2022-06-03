@@ -161,15 +161,12 @@ class MainWindow(QMainWindow):
     def delete_ingredient(self):
         
         if self.adding_new_ingredient:
-            self.ingredient_table.setCurrentRow(0)
-            temp = self.new_ingredient_holder
-            row = self.ingredient_table.row(temp)
-            self.ingredient_table.takeItem(row)
-            #self.remove_new_ingredient()
-            
+            self.ingredient_table.setCurrentRow(100)
+            self.remove_new_ingredient()
         else:
             self.active_recipe.ingredients.pop(self.active_ingredient.name)
             self.add_edit_page_update_ingredient_list()
+        self.ingredient_inputs_mode("OFF")
         self.clear_ingredient_inputs()
 
     def edit_info_btn_slot(self):
@@ -347,47 +344,3 @@ if __name__ == '__main__':
    window = MainWindow()
    window.show()
    app.exec_()
-
-
-
-# Archive
-'''
-    def build_view_widget(self):
-        #Widgets
-        self.actionMenu = QComboBox()
-        self.actionMenu.addItems(self.actionList)
-        self.recipeList = QListWidget()
-        self.recipeList.addItems(list(self.recipe_master.keys()))
-        self.view_recipe_label = QLabel()
-        self.view_author_label = QLabel()
-        self.view_servings_label = QLabel()
-        self.view_ingredient_list = QListWidget()
-        self.view_instructions = QListWidget() #TODO Change to textedit
-        instruction_label = QLabel("Instructions")
-        ingredient_label = QLabel("Ingredients")
-        
-        # Left Panel 
-        left_panel = QVBoxLayout()
-        left_panel.addWidget(self.actionMenu)
-        left_panel.addWidget(self.recipeList)
-
-        # Right Panel
-        right_panel = QVBoxLayout()
-        header_bar = QHBoxLayout()
-        header_bar.addWidget(self.view_recipe_label)
-        header_bar.addWidget(self.view_author_label)
-        right_panel.addLayout(header_bar)
-        right_panel.addWidget(self.view_servings_label)
-        right_panel.addWidget(ingredient_label)
-        right_panel.addWidget(self.view_ingredient_list)
-        right_panel.addWidget(instruction_label)
-        right_panel.addWidget(self.view_instructions)
-        
-        combined_layout = QHBoxLayout()
-        combined_layout.addLayout(left_panel)
-        combined_layout.addLayout(right_panel)
-        view_widget = QWidget()
-        view_widget.setLayout(combined_layout)
-
-        return view_widget
-    '''        
