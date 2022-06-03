@@ -16,7 +16,7 @@ from recipe import *
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, \
     QVBoxLayout, QWidget, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, \
     QListWidget, QHBoxLayout, QVBoxLayout, QTextBrowser, QStackedLayout, QListWidgetItem, \
-    QAbstractItemView
+    QAbstractItemView, QTabWidget
 
 from PySide6.QtCore import Qt
 
@@ -32,17 +32,20 @@ class MainWindow(QMainWindow):
 
         self.add_data()
         self.build_gui()
-        
         self.connect_signals_to_slots()
     
     def build_gui(self):
         self.actionList = ["Recipes"]
         recipe_page = self.build_recipe_widget()
-        self.page_switcher = QStackedLayout()
-        self.page_switcher.addWidget(recipe_page)     
-        container = QWidget()
-        container.setLayout(self.page_switcher)
-        self.setCentralWidget(container)
+        shopping_page = QWidget()
+        self.page_switcher = QTabWidget()
+        self.page_switcher.addTab(recipe_page, "Recipes")
+        self.page_switcher.addTab(shopping_page, "Shopping List")
+        #self.page_switcher = QStackedLayout()
+        #self.page_switcher.addWidget(recipe_page)     
+        #container = QWidget()
+        #container.setLayout(self.page_switcher)
+        self.setCentralWidget(self.page_switcher)
         
     
     def build_recipe_widget(self):
@@ -149,7 +152,6 @@ class MainWindow(QMainWindow):
 
     def connect_signals_to_slots(self):
         self.add_recipeList.currentItemChanged.connect(self.recipe_selected)
-        self.add_actionMenu.activated.connect(self.change_page)
         self.ingredient_table.itemSelectionChanged.connect(self.ingredient_selected)
         self.add_ingredient_btn.pressed.connect(self.add_ingredient_btn_slot)
         self.edit_ingredient_btn.pressed.connect(self.edit_ingredient_btn_slot)
@@ -217,12 +219,7 @@ class MainWindow(QMainWindow):
             self.edit_ingred_container.hide()
             self.ingredient_table.setCurrentRow(100)
             self.ingredient_table.setSelectionMode(QAbstractItemView.NoSelection)
-            self.remove_new_ingredient()
-
-
-    ## Function that handles switching between the different pages when the actionBox changes
-    def change_page(self, index):
-        self.page_switcher.setCurrentIndex(index)    
+            self.remove_new_ingredient()    
     
     ## This function is activated when a user selects a recipe from the list
     ## It fills in the recipe information on the right hand side of the panel
@@ -322,6 +319,7 @@ class MainWindow(QMainWindow):
         for ingredient in list(self.active_recipe.ingredients.values()):
             self.ingredient_table.addItem("{quantity} {unit} of {ingredient}".format(\
                 quantity=ingredient.quantity, unit=ingredient.unit, ingredient=ingredient.name))
+                
     
     def remove_new_ingredient(self):
         if self.adding_new_ingredient:
