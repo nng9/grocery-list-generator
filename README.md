@@ -1,3 +1,15 @@
 # Grocery List Generator
 
-I waste a lot of time grocery shopping each week because I do not know exactly which ingredients I need. This program is useful by generating a weekly meal plan and ingredient list for me, so that I can walk into a grocery store and know exactly the items I need to purchase.
+## Problem
+I waste time grocery shopping because I do not know exactly how many ingredients I need for the week.
+
+## Solution
+This program stores recipes and allows users create shopping lists by adding recipes to them. By doing this, the user can know exactly which ingredients to buy at the store. 
+
+## Implementation
+This desktop application written in Python and uses the PySide6 library.
+
+## TODO
+- Build out the shopping list tab
+- Add an Import/Export Tab
+- Implement email library which allows users to share shopping lists or recipes with email
