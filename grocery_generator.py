@@ -344,10 +344,10 @@ class MainWindow(QMainWindow):
                 self.adding_new_ingredient = False
     
     def update_directions_list(self):
-        count = 1
+        count = 0
         for direction in self.active_recipe.instructions:
             string = "<b>Test </b>"
-            self.directions_list.addItem(ListItem(string, [direction]))
+            self.directions_list.addItem(ListItem(self.directions_list.item(count).customData, [direction]))
             count +=1
             #"Step {}: {}".format(count, direction)
         print(self.directions_list.item(0).customData)
