@@ -10,7 +10,7 @@ This program stores recipes and allows users to create shopping lists by adding 
 This desktop application is written in Python and uses the PySide6 library.
 
 ## Snapshot as of Jun. 9, 2022
-![The App](https://github.com/nng9/grocery-list-generator/Grocery-app.jpg)
+![The App](./Grocery-app.jpg)
 
 ## TODO
 - Build out the shopping list tab
